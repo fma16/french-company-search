@@ -134,6 +134,105 @@ describe("markdown-builder", () => {
     });
   });
 
+  describe("buildMarkdown with custom template", () => {
+    it("should apply template override for corporate entities", () => {
+      const mockData: CompanyData = {
+        id: "template-test-1",
+        updatedAt: "2024-01-01",
+        nombreRepresentantsActifs: 1,
+        nombreEtablissementsOuverts: 1,
+        formality: {
+          siren: "123456789",
+          content: {
+            succursaleOuFiliale: "AVEC_ETABLISSEMENT",
+            formeExerciceActivitePrincipale: "COMMERCIALE",
+            personneMorale: {
+              denomination: "Demo Corp",
+              adresseEntreprise: {
+                adresse: {
+                  codePostal: "75001",
+                  numeroVoie: "1",
+                  typeVoie: "rue",
+                  libelleVoie: "du Temple",
+                  commune: "Paris",
+                },
+              },
+              composition: {
+                pouvoirs: [
+                  {
+                    individu: {
+                      descriptionPersonne: {
+                        nom: "Durand",
+                        prenoms: ["Alice"],
+                        genre: "2",
+                      },
+                    },
+                    roleEntreprise: "5132",
+                  },
+                ],
+              },
+            },
+            natureCreation: {
+              formeJuridique: "5370",
+            },
+          },
+        },
+      };
+
+      const template = "Company {{company_name}} ({{siren_formatted}}) led by {{representative_name}}";
+      const result = buildMarkdown(mockData, { template });
+
+      expect(result).toBe("Company Demo Corp (123\u00A0456\u00A0789) led by Alice DURAND");
+    });
+
+    it("should apply template override for individual entrepreneurs", () => {
+      const mockData: CompanyData = {
+        id: "template-test-2",
+        updatedAt: "2025-08-12T12:00:00+02:00",
+        nombreRepresentantsActifs: 1,
+        nombreEtablissementsOuverts: 1,
+        formality: {
+          siren: "987654321",
+          content: {
+            succursaleOuFiliale: "SANS_ETABLISSEMENT",
+            formeExerciceActivitePrincipale: "COMMERCIALE",
+            personnePhysique: {
+              identite: {
+                entrepreneur: {
+                  descriptionPersonne: {
+                    nom: "Martin",
+                    prenoms: ["Marie"],
+                    genre: "2",
+                    dateDeNaissance: "1980-01-15",
+                    lieuDeNaissance: "Lyon",
+                    nationalite: "Française",
+                  },
+                },
+              },
+              adresseEntreprise: {
+                adresse: {
+                  numeroVoie: "45",
+                  typeVoie: "avenue",
+                  libelleVoie: "Victor Hugo",
+                  codePostal: "69001",
+                  commune: "Lyon",
+                },
+              },
+            },
+            natureCreation: {
+              formeJuridique: "1000",
+            },
+          },
+        },
+      } as CompanyData;
+
+      const template = "{{civility}} {{full_name}} ({{legal_form}})";
+      const result = buildMarkdown(mockData, { template });
+
+      expect(result).toBe("Madame Marie Martin (Entrepreneur individuel)");
+    });
+  });
+
   describe("extractRepresentativeInfo", () => {
     it("should extract representative with role priority", () => {
       const composition = {

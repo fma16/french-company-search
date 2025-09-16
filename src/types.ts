@@ -1,6 +1,8 @@
 export interface Preferences {
   inpiUsername: string;
   inpiPassword: string;
+  autoReadClipboard?: boolean;
+  outputTemplate?: string;
 }
 
 // Common address interface to replace 'any' types
