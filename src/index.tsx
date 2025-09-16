@@ -1,10 +1,21 @@
-import { Action, ActionPanel, Detail, Form, useNavigation, environment } from "@raycast/api";
-import { useState } from "react";
+import {
+  Action,
+  ActionPanel,
+  Clipboard,
+  Detail,
+  Form,
+  Toast,
+  environment,
+  getPreferenceValues,
+  showToast,
+  useNavigation,
+} from "@raycast/api";
+import { useEffect, useState } from "react";
 import { validateAndExtractSiren } from "./lib/utils";
 import { useCompanyData } from "./lib/useCompanyData";
 import { ErrorView } from "./components/ErrorView";
 import { CompanyDetailsView } from "./components/CompanyDetailsView";
-import { CompanyData } from "./types";
+import { CompanyData, Preferences } from "./types";
 
 export default function Command() {
   return <SearchForm />;
@@ -12,17 +23,73 @@ export default function Command() {
 
 function SearchForm() {
   const { push } = useNavigation();
+  const preferences = getPreferenceValues<Preferences>();
+  const shouldReadClipboard = preferences.autoReadClipboard ?? true;
   const [sirenInput, setSirenInput] = useState<string>("");
   const [sirenError, setSirenError] = useState<string | undefined>();
+  const [hasInitialisedFromClipboard, setHasInitialisedFromClipboard] = useState(false);
+
+  useEffect(() => {
+    if (!shouldReadClipboard || hasInitialisedFromClipboard) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function bootstrapFromClipboard() {
+      try {
+        const clipboardContent = await Clipboard.readText();
+        if (!isMounted) {
+          return;
+        }
+
+        const trimmedValue = clipboardContent?.trim();
+        const detectedSiren = trimmedValue ? validateAndExtractSiren(trimmedValue) : undefined;
+
+        if (!trimmedValue || !detectedSiren) {
+          setHasInitialisedFromClipboard(true);
+          return;
+        }
+
+        setSirenInput(trimmedValue);
+        if (sirenError) {
+          setSirenError(undefined);
+        }
+
+        setHasInitialisedFromClipboard(true);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        if (environment.isDevelopment) {
+          console.error("Failed to read clipboard", error);
+        }
+
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Unable to read clipboard",
+          message: "Please check Raycast permissions.",
+        });
+        setHasInitialisedFromClipboard(true);
+      }
+    }
+
+    void bootstrapFromClipboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [shouldReadClipboard, hasInitialisedFromClipboard, sirenError]);
 
   function handleAction() {
     if (!sirenInput) {
-      setSirenError("⚠️ Veuillez saisir un numéro SIREN (9 chiffres) ou SIRET (14 chiffres).");
+      setSirenError("⚠️ Please enter a SIREN (9 digits) or a SIRET (14 digits).");
       return;
     }
     const siren = validateAndExtractSiren(sirenInput);
     if (!siren) {
-      setSirenError("❌ Format invalide. Le SIREN doit contenir 9 chiffres, le SIRET 14 chiffres.");
+      setSirenError("❌ Invalid format. A SIREN must contain 9 digits and a SIRET 14 digits.");
       return;
     }
     setSirenError(undefined);
@@ -66,7 +133,7 @@ function CompanyDetail({ siren }: { siren: string }) {
   if (error) {
     return (
       <Detail
-        markdown={`## ⚠️ Impossible de charger les données\n\nUn problème est survenu. Veuillez vérifier le message d'erreur qui est apparu et réessayer.\n\n**SIREN recherché :** ${siren}`}
+        markdown={`## ⚠️ Unable to load data\n\nSomething went wrong while fetching the company information. Please review the error message that appeared and try again.\n\n**SIREN searched:** ${siren}`}
       />
     );
   }
