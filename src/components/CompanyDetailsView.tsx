@@ -7,12 +7,16 @@ import { buildPappersSearchUrl } from "../lib/link-builder";
 
 interface CompanyDetailsViewProps {
   data: CompanyData;
+  templateOverride?: string;
 }
 
-export function CompanyDetailsView({ data }: CompanyDetailsViewProps) {
+export function CompanyDetailsView({ data, templateOverride }: CompanyDetailsViewProps) {
   const { data: markdown, isLoading } = usePromise(
-    async (companyData: CompanyData) => await buildMarkdownAsync(companyData),
-    [data],
+    async (companyData: CompanyData) =>
+      await buildMarkdownAsync(companyData, {
+        template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
+      }),
+    [data, templateOverride],
   );
 
   const displayMarkdown = markdown || "Loading company information...";
@@ -32,17 +36,24 @@ export function CompanyDetailsView({ data }: CompanyDetailsViewProps) {
       actions={
         markdown ? (
           <ActionPanel>
+            <Action.CopyToClipboard
+              title="Copy to Clipboard"
+              content={{
+                html: markdownToHtml(markdown),
+                text: markdownToPlainText(markdown),
+              }}
+            />
             {pappersUrl ? (
               <Action.OpenInBrowser
                 title="Ouvrir Sur Pappers"
                 url={pappersUrl}
-                shortcut={{ modifiers: ["cmd"], key: "enter" }}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
               />
             ) : (
               <Action
                 title="Ouvrir Sur Pappers"
                 icon={Icon.ExclamationMark}
-                shortcut={{ modifiers: ["cmd"], key: "enter" }}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
                 onAction={async () => {
                   await showToast({
                     style: Toast.Style.Failure,
@@ -52,13 +63,6 @@ export function CompanyDetailsView({ data }: CompanyDetailsViewProps) {
                 }}
               />
             )}
-            <Action.CopyToClipboard
-              title="Copy to Clipboard"
-              content={{
-                html: markdownToHtml(markdown),
-                text: markdownToPlainText(markdown),
-              }}
-            />
           </ActionPanel>
         ) : undefined
       }
