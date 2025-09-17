@@ -1,3 +1,17 @@
+// Disable ANSI styling so Raycast developer console keeps logs readable
+process.env.FORCE_COLOR = "0";
+process.env.NO_COLOR = "1";
+const ansiPattern = /\u001b\[[0-9;]*m/g;
+const wrapConsoleMethod = (method: (...args: unknown[]) => void) =>
+  (...args: unknown[]) => {
+    method(
+      ...args.map((arg) => (typeof arg === "string" ? arg.replace(ansiPattern, "") : arg)),
+    );
+  };
+console.log = wrapConsoleMethod(console.log.bind(console));
+console.warn = wrapConsoleMethod(console.warn.bind(console));
+console.error = wrapConsoleMethod(console.error.bind(console));
+
 import {
   Action,
   ActionPanel,
