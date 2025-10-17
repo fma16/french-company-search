@@ -26,6 +26,7 @@ import {
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { validateAndExtractSiren } from "./lib/utils";
+import { AVAILABLE_TEMPLATE_VARIABLES } from "./lib/markdown-builder";
 import { useCompanyData } from "./lib/useCompanyData";
 import { ErrorView } from "./components/ErrorView";
 import { CompanyDetailsView } from "./components/CompanyDetailsView";
@@ -42,6 +43,7 @@ function SearchForm() {
   const [sirenInput, setSirenInput] = useState<string>("");
   const [sirenError, setSirenError] = useState<string | undefined>();
   const [hasInitialisedFromClipboard, setHasInitialisedFromClipboard] = useState(false);
+  const [templateOverride, setTemplateOverride] = useState<string>(preferences.outputTemplate ?? "");
 
   useEffect(() => {
     if (!shouldReadClipboard || hasInitialisedFromClipboard) {
@@ -107,7 +109,7 @@ function SearchForm() {
       return;
     }
     setSirenError(undefined);
-    push(<CompanyDetail siren={siren} />);
+    push(<CompanyDetail siren={siren} templateOverride={templateOverride} />);
   }
 
   return (
@@ -115,6 +117,18 @@ function SearchForm() {
       actions={
         <ActionPanel>
           <Action title="Search Company" onAction={handleAction} shortcut={{ modifiers: [], key: "return" }} />
+          <Action.Push
+            title="Edit Template"
+            shortcut={{ modifiers: ["cmd", "shift"], key: "e" }}
+            target={
+              <TemplateEditor
+                initialTemplate={templateOverride}
+                onSave={(value) => {
+                  setTemplateOverride(value);
+                }}
+              />
+            }
+          />
         </ActionPanel>
       }
     >
@@ -135,7 +149,7 @@ function SearchForm() {
   );
 }
 
-function CompanyDetail({ siren }: { siren: string }) {
+function CompanyDetail({ siren, templateOverride }: { siren: string; templateOverride?: string }) {
   const { data, isLoading, error } = useCompanyData(siren);
 
   // Log API response for debugging in development
@@ -166,7 +180,7 @@ function CompanyDetail({ siren }: { siren: string }) {
 
   // Handle successful data state
   if (data) {
-    return <CompanyDetailsView data={data} />;
+    return <CompanyDetailsView data={data} templateOverride={templateOverride} />;
   }
 
   return <Detail markdown="Aucune information disponible." />;
@@ -190,4 +204,75 @@ function logApiResponse(data: CompanyData) {
       hasAdresse: !!data.formality.content.personneMorale.adresseEntreprise,
     });
   }
+}
+
+function TemplateEditor({
+  initialTemplate,
+  onSave,
+}: {
+  initialTemplate: string;
+  onSave: (value: string) => void;
+}) {
+  const { pop } = useNavigation();
+  const [value, setValue] = useState(initialTemplate);
+
+  function handleSave() {
+    onSave(value.trim());
+    void showToast({
+      style: Toast.Style.Success,
+      title: "Template updated",
+    });
+    pop();
+  }
+
+  return (
+    <Form
+      enableDrafts
+      navigationTitle="Edit Template"
+      actions={
+        <ActionPanel>
+          <Action title="Save Template" onAction={handleSave} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+        </ActionPanel>
+      }
+    >
+      <Form.TextArea
+        id="template"
+        title="Custom Template"
+        placeholder="{{company_header}}\n\n{{company_details}}\n\n{{representative_line}}"
+        value={value}
+        onChange={setValue}
+        info="Leave empty to use the default template."
+      />
+      <Form.Separator />
+      <Form.Description title="Available Variables" text="The template supports the following placeholders:" />
+      {buildVariableSections()}
+    </Form>
+  );
+}
+
+function buildVariableSections() {
+  const sections: JSX.Element[] = [];
+
+  const entries = Object.entries(AVAILABLE_TEMPLATE_VARIABLES);
+  for (const [index, [groupKey, variables]] of entries.entries()) {
+    const groupTitle = groupKey === "personneMorale"
+      ? "Corporate entities"
+      : groupKey === "personnePhysique"
+      ? "Individual entrepreneurs"
+      : "Common";
+
+    const text = variables.map((variable) => `• ${variable}`).join("\n");
+    if (index > 0) {
+      sections.push(<Form.Separator key={`separator-${groupKey}`} />);
+    }
+    sections.push(
+      <Form.Description
+        key={groupKey}
+        title={groupTitle}
+        text={text}
+      />,
+    );
+  }
+
+  return sections;
 }

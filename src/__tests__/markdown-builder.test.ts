@@ -81,6 +81,84 @@ describe("markdown-builder", () => {
       expect(result).toContain("123\u00A0456\u00A0789");
       expect(result).toContain("Jean DUPONT");
     });
+
+    it("should format corporate entity in English using the default template", () => {
+      const mockData: CompanyData = {
+        id: "test-id-123",
+        formality: {
+          siren: "123456789",
+          content: {
+            succursaleOuFiliale: "AVEC_ETABLISSEMENT",
+            formeExerciceActivitePrincipale: "COMMERCIALE",
+            personneMorale: {
+              denomination: "Test Company SARL",
+              identite: {
+                entreprise: {
+                  denomination: "Test Company SARL",
+                },
+                description: {
+                  montantCapital: 10000,
+                },
+              },
+              adresseEntreprise: {
+                adresse: {
+                  codePostal: "75001",
+                  numeroVoie: "123",
+                  typeVoie: "rue",
+                  libelleVoie: "de la Paix",
+                  commune: "Paris",
+                },
+              },
+              immatriculationRcs: {
+                villeImmatriculation: "PARIS",
+                numeroRcs: "123456789",
+              },
+              composition: {
+                pouvoirs: [
+                  {
+                    individu: {
+                      descriptionPersonne: {
+                        nom: "Dupont",
+                        prenoms: ["Jean"],
+                        genre: "1",
+                      },
+                    },
+                    roleEntreprise: "5132",
+                  },
+                ],
+              },
+            },
+            natureCreation: {
+              dateCreation: "2020-01-01",
+              societeEtrangere: false,
+              formeJuridique: "5499",
+              formeJuridiqueInsee: "5499",
+              etablieEnFrance: true,
+              salarieEnFrance: false,
+              relieeEntrepriseAgricole: false,
+              entrepriseAgricole: false,
+            },
+          },
+        },
+        updatedAt: "2023-01-01",
+        nombreEtablissementsOuverts: 1,
+        nombreRepresentantsActifs: 1,
+      };
+
+      const result = buildPersonneMoraleMarkdown(mockData, undefined, "en");
+
+      expect(result).toContain("**Test Company SARL**,");
+      expect(result).toContain(
+        "A Limited liability (*Société à responsabilité limitée (SARL)*) company, with a share capital of 10\u00A0000,00\u00A0€,",
+      );
+      expect(result).toContain("Having its head office located at 123 rue de la Paix, 75001 Paris,");
+      expect(result).toContain(
+        "Registered under the number 123\u00A0456\u00A0789 with the Registry of Trade and Companies of Paris,",
+      );
+      expect(result).toContain(
+        "Represented by Jean DUPONT, its President, who warrants that he is duly authorized for the purposes herein set out,",
+      );
+    });
   });
 
   describe("buildPersonnePhysiqueMarkdown", () => {

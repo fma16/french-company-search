@@ -11,15 +11,28 @@ interface CompanyDetailsViewProps {
 }
 
 export function CompanyDetailsView({ data, templateOverride }: CompanyDetailsViewProps) {
-  const { data: markdown, isLoading } = usePromise(
+  const { data: markdowns, isLoading } = usePromise(
     async (companyData: CompanyData) =>
-      await buildMarkdownAsync(companyData, {
-        template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
-      }),
+      await Promise.all([
+        buildMarkdownAsync(companyData, {
+          template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
+          language: "fr",
+        }),
+        buildMarkdownAsync(companyData, {
+          template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
+          language: "en",
+        }),
+      ]).then(([fr, en]) => ({ fr, en })),
     [data, templateOverride],
   );
 
-  const displayMarkdown = markdown || "Loading company information...";
+  const frenchMarkdown =
+    markdowns?.fr ||
+    (isLoading ? "Loading company information..." : "Aucune information disponible pour cette société pour le moment.");
+  const englishMarkdown = markdowns?.en ?? "";
+  const englishSection = englishMarkdown ? `\n\n---\n\n**English Version**\n\n${englishMarkdown}` : "";
+  const displayMarkdown = `${frenchMarkdown}${englishSection}`;
+
   const pappersUrl = buildPappersSearchUrl({
     siren: data.formality?.siren,
     denomination:
@@ -34,15 +47,25 @@ export function CompanyDetailsView({ data, templateOverride }: CompanyDetailsVie
       isLoading={isLoading}
       metadata={<CompanyMetadata data={data} />}
       actions={
-        markdown ? (
+        !isLoading ? (
           <ActionPanel>
             <Action.CopyToClipboard
-              title="Copy to Clipboard"
+              title="Copy French Version"
               content={{
-                html: markdownToHtml(markdown),
-                text: markdownToPlainText(markdown),
+                html: markdownToHtml(frenchMarkdown),
+                text: markdownToPlainText(frenchMarkdown),
               }}
             />
+            {englishMarkdown ? (
+              <Action.CopyToClipboard
+                title="Copy English Version"
+                shortcut={{ modifiers: ["cmd"], key: "e" }}
+                content={{
+                  html: markdownToHtml(englishMarkdown),
+                  text: markdownToPlainText(englishMarkdown),
+                }}
+              />
+            ) : null}
             {pappersUrl ? (
               <Action.OpenInBrowser
                 title="Ouvrir Sur Pappers"

@@ -5,6 +5,8 @@ export interface Preferences {
   outputTemplate?: string;
 }
 
+export type OutputLanguage = "fr" | "en";
+
 // Common address interface to replace 'any' types
 export interface AddressInfo {
   adresse: {
@@ -35,6 +37,8 @@ export interface AddressInfo {
 export interface RepresentativeInfo {
   name: string;
   role: string;
+  roleCode?: string;
+  roleEnglish?: string;
   gender: string | null;
   // For cascade representation when representative is a holding company
   isHolding?: boolean;
@@ -42,6 +46,8 @@ export interface RepresentativeInfo {
   holdingRepresentative?: {
     name: string;
     role: string;
+    roleCode?: string;
+    roleEnglish?: string;
     gender: string | null;
   };
 }
