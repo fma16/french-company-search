@@ -149,11 +149,11 @@ describe("markdown-builder", () => {
 
       expect(result).toContain("**Test Company SARL**,");
       expect(result).toContain(
-        "A Limited liability (*Société à responsabilité limitée (SARL)*) company, with a share capital of 10\u00A0000,00\u00A0€,",
+        "A Limited liability (*Société à responsabilité limitée (SARL)*) company, with a share capital of €10,000.00,",
       );
       expect(result).toContain("Having its head office located at 123 rue de la Paix, 75001 Paris,");
       expect(result).toContain(
-        "Registered under the number 123\u00A0456\u00A0789 with the Registry of Trade and Companies of Paris,",
+        "Registered under number 123,456,789 with the Paris Trade and Companies Register,",
       );
       expect(result).toContain(
         "Represented by Jean DUPONT, its President, who warrants that he is duly authorized for the purposes herein set out,",

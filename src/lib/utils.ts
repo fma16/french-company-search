@@ -201,10 +201,6 @@ export function getEnglishAuthorizationPhrase(gender: string | null): { pronoun:
   return { pronoun: "they", verb: "are" };
 }
 
-export function getCorporatePronoun(): string {
-  return "it";
-}
-
 export function getCorporateAuthorizationPhrase(): { pronoun: string; verb: string } {
   return { pronoun: "it", verb: "is" };
 }
@@ -306,10 +302,6 @@ export function getLegalFormLabelEnglish(legalFormLabel: string): string {
     }
   }
 
-  if (/^\d+$/.test(trimmed)) {
-    return `[[Legal form code ${trimmed} - mapping to add]]`;
-  }
-
   return trimmed;
 }
 
@@ -320,6 +312,13 @@ export function getLegalFormLabel(code: string): string {
 export function formatSiren(siren: string): string {
   if (siren && siren.length === 9) {
     return `${siren.slice(0, 3)}\u00A0${siren.slice(3, 6)}\u00A0${siren.slice(6, 9)}`;
+  }
+  return siren;
+}
+
+export function formatSirenEnglish(siren: string): string {
+  if (siren && siren.length === 9) {
+    return `${siren.slice(0, 3)},${siren.slice(3, 6)},${siren.slice(6, 9)}`;
   }
   return siren;
 }
@@ -357,6 +356,23 @@ export function formatFrenchNumber(value: string | number): string {
 
   // Return with French decimal separator (comma) and exactly 2 decimal places
   return `${formattedInteger},${decimalPart}`;
+}
+
+export function formatEnglishNumber(value: string | number): string {
+  if (!value) return value as string;
+
+  const numString = value.toString().replace(/\s/g, "").replace(",", ".");
+
+  if (!/^\d+(\.\d+)?$/.test(numString)) {
+    return value as string;
+  }
+
+  const num = parseFloat(numString);
+  return num.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true,
+  });
 }
 
 /**

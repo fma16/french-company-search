@@ -4,7 +4,9 @@ import {
   formatAddress,
   formatField,
   formatSiren,
+  formatSirenEnglish,
   formatFrenchNumber,
+  formatEnglishNumber,
   getGenderAgreement,
   getLegalFormLabel,
   getLegalFormLabelEnglish,
@@ -244,7 +246,7 @@ export function buildPersonnePhysiqueMarkdown(
   const personalAddressLine = strings.addressLine(demeurant);
 
   const siren = data.formality.siren;
-  const sirenFormatted = formatSiren(siren);
+  const sirenFormatted = language === "en" ? formatSirenEnglish(siren) : formatSiren(siren);
 
   const legalFormCode = data.formality.content.natureCreation?.formeJuridique;
   const legalForm = legalFormCode ? getLegalFormLabel(legalFormCode) : "";
@@ -373,7 +375,9 @@ function createPersonneMoraleTemplateVariables(
   const natureCreation = content.natureCreation;
 
   const siren = data.formality.siren;
-  const sirenFormatted = formatSiren(siren);
+  const sirenFormattedFrench = formatSiren(siren);
+  const sirenFormattedEnglish = formatSirenEnglish(siren);
+  const sirenFormatted = language === "en" ? sirenFormattedEnglish : sirenFormattedFrench;
   const legalFormCode = natureCreation?.formeJuridique;
   const legalForm = legalFormCode ? getLegalFormLabel(legalFormCode) : "";
 
@@ -382,9 +386,14 @@ function createPersonneMoraleTemplateVariables(
   const denomination = formatField(denominationValue, FALLBACK_VALUES.MISSING_DATA);
   const shareCapitalValue = identite?.description?.montantCapital ?? personneMorale.capital?.montant;
   const shareCapitalRaw = formatField(shareCapitalValue, FALLBACK_VALUES.MISSING_DATA);
-  const shareCapital =
+  const shareCapitalFrench =
     shareCapitalRaw !== FALLBACK_VALUES.MISSING_DATA ? formatFrenchNumber(shareCapitalRaw) : shareCapitalRaw;
-  const shareCapitalWithCurrency = `${shareCapital}\u00A0€`;
+  const shareCapitalEnglish =
+    shareCapitalRaw !== FALLBACK_VALUES.MISSING_DATA ? formatEnglishNumber(shareCapitalRaw) : shareCapitalRaw;
+  const shareCapitalWithCurrencyFrench =
+    shareCapitalFrench !== FALLBACK_VALUES.MISSING_DATA ? `${shareCapitalFrench}\u00A0€` : shareCapitalFrench;
+  const shareCapitalWithCurrencyEnglish =
+    shareCapitalEnglish !== FALLBACK_VALUES.MISSING_DATA ? `€${shareCapitalEnglish}` : shareCapitalEnglish;
   const legalFormEnglish = getLegalFormLabelEnglish(legalForm);
   const address = formatAddress(personneMorale.adresseEntreprise);
   const codePostal = personneMorale.adresseEntreprise?.adresse?.codePostal;
@@ -438,9 +447,9 @@ function createPersonneMoraleTemplateVariables(
 
   if (isEnglish) {
     const frenchLegalForm = legalForm || FALLBACK_VALUES.MISSING_DATA;
-    shareCapitalLine = `A ${legalFormEnglish} (*${frenchLegalForm}*) company, with a share capital of ${shareCapitalWithCurrency},`;
+    shareCapitalLine = `A ${legalFormEnglish} (*${frenchLegalForm}*) company, with a share capital of ${shareCapitalWithCurrencyEnglish},`;
     headOfficeLine = `Having its head office located at ${address},`;
-    registrationLine = `Registered under the number ${sirenFormatted} with the Registry of Trade and Companies of ${rcsCity},`;
+    registrationLine = `Registered under number ${sirenFormattedEnglish} with the ${rcsCity} Trade and Companies Register,`;
     companyHeader = `**${denomination}**,`;
 
     if (representative.isHolding && representative.holdingRepresentative) {
@@ -472,7 +481,7 @@ function createPersonneMoraleTemplateVariables(
     }
   } else {
     const strings = PERSONNE_MORALE_STRINGS_FR;
-    shareCapitalLine = strings.shareCapitalLine(legalForm || FALLBACK_VALUES.MISSING_DATA, shareCapitalWithCurrency);
+    shareCapitalLine = strings.shareCapitalLine(legalForm || FALLBACK_VALUES.MISSING_DATA, shareCapitalWithCurrencyFrench);
     headOfficeLine = strings.headOfficeLine(address);
     registrationLine = strings.registrationLine(rcsCity, sirenFormatted);
     companyHeader = strings.companyHeader(denomination);
@@ -519,6 +528,10 @@ function createPersonneMoraleTemplateVariables(
     : "";
   const representativeVerbValue = representativeVerb || (language === "en" ? "is" : "");
   const holdingVerbValue = representative.isHolding ? holdingVerb : "";
+  const shareCapitalValueForLanguage = isEnglish ? shareCapitalEnglish : shareCapitalFrench;
+  const shareCapitalWithCurrencyForLanguage = isEnglish
+    ? shareCapitalWithCurrencyEnglish
+    : shareCapitalWithCurrencyFrench;
 
   return {
     company_type: "personne_morale",
@@ -529,9 +542,9 @@ function createPersonneMoraleTemplateVariables(
     siren_formatted: sirenFormatted,
     legal_form: legalForm,
     legal_form_english: legalFormEnglish,
-    share_capital: shareCapital,
+    share_capital: shareCapitalValueForLanguage,
     share_capital_raw: shareCapitalRaw,
-    share_capital_with_currency: shareCapitalWithCurrency,
+    share_capital_with_currency: shareCapitalWithCurrencyForLanguage,
     share_capital_line: shareCapitalLine,
     share_capital_currency: "€",
     rcs_city: rcsCity,
