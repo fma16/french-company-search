@@ -15,7 +15,7 @@ type ExtensionPreferences = {
   /** Read Clipboard on Launch - Automatically paste SIREN/SIRET or company name from the clipboard when the extension opens. */
   "autoReadClipboard": boolean,
   /** Output Template - Define your custom output template. Use {{variable}} for placeholders. See documentation for available variables. */
-  "outputTemplate"?: string
+  "outputTemplate"?: unknown
 }
 
 /** Preferences accessible in all the extension's commands */
@@ -30,3 +30,4 @@ declare namespace Arguments {
   /** Arguments passed to the `index` command */
   export type Index = {}
 }
+

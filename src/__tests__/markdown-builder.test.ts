@@ -152,9 +152,7 @@ describe("markdown-builder", () => {
         "A Limited liability (*Société à responsabilité limitée (SARL)*) company, with a share capital of €10,000.00,",
       );
       expect(result).toContain("Having its head office located at 123 rue de la Paix, 75001 Paris,");
-      expect(result).toContain(
-        "Registered under number 123,456,789 with the Paris Trade and Companies Register,",
-      );
+      expect(result).toContain("Registered under number 123,456,789 with the Paris Trade and Companies Register,");
       expect(result).toContain(
         "Represented by Jean DUPONT, its President, who warrants that he is duly authorized for the purposes herein set out,",
       );
@@ -197,7 +195,14 @@ describe("markdown-builder", () => {
               },
             },
             natureCreation: {
+              dateCreation: "2020-01-01",
+              societeEtrangere: false,
+              formeJuridique: "1000",
+              formeJuridiqueInsee: "1000",
               etablieEnFrance: true,
+              salarieEnFrance: false,
+              relieeEntrepriseAgricole: false,
+              entrepriseAgricole: false,
             },
           },
         },
@@ -251,7 +256,14 @@ describe("markdown-builder", () => {
               },
             },
             natureCreation: {
+              dateCreation: "2020-01-01",
+              societeEtrangere: false,
               formeJuridique: "5370",
+              formeJuridiqueInsee: "5370",
+              etablieEnFrance: true,
+              salarieEnFrance: false,
+              relieeEntrepriseAgricole: false,
+              entrepriseAgricole: false,
             },
           },
         },
@@ -298,7 +310,14 @@ describe("markdown-builder", () => {
               },
             },
             natureCreation: {
+              dateCreation: "2020-01-01",
+              societeEtrangere: false,
               formeJuridique: "1000",
+              formeJuridiqueInsee: "1000",
+              etablieEnFrance: true,
+              salarieEnFrance: false,
+              relieeEntrepriseAgricole: false,
+              entrepriseAgricole: false,
             },
           },
         },

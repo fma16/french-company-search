@@ -51,7 +51,7 @@
       "name": "outputTemplate",
       "title": "Output Template",
       "description": "Define your custom output template. Use {{variable}} for placeholders. See documentation for available variables.",
-      "type": "textarea",
+      "type": "textfield",
       "required": false,
       "placeholder": "{{company_header}}\\n\\n{{company_details}}\\n\\n{{representative_line}}"
     }

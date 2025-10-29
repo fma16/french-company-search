@@ -219,7 +219,7 @@ const ROLE_NAME_ENGLISH_OVERRIDES: Record<string, string> = {
   "membre du directoire": "Member of the Management Board",
   "membre du conseil de surveillance": "Member of the Supervisory Board",
   "vice-president": "Vice President",
-  "dirigeant": "Director",
+  dirigeant: "Director",
   "dirigeant a l'etranger": "Foreign representative",
   "dirigeant en france": "Representative in France",
   liquidateur: "Liquidator",
@@ -273,7 +273,10 @@ export function getRoleNameEnglish(roleOrCode: string): string {
 }
 
 const LEGAL_FORM_ENGLISH_OVERRIDES: { pattern: RegExp; replacement: string }[] = [
-  { pattern: /société par actions simplifiée à associé unique/i, replacement: "Single-shareholder simplified joint-stock" },
+  {
+    pattern: /société par actions simplifiée à associé unique/i,
+    replacement: "Single-shareholder simplified joint-stock",
+  },
   { pattern: /société par actions simplifiée/i, replacement: "Simplified joint-stock" },
   { pattern: /société à responsabilité limitée/i, replacement: "Limited liability" },
   { pattern: /société anonyme/i, replacement: "Public limited" },

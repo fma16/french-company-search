@@ -22,6 +22,8 @@ const LEGAL_FORM_SA = "5599";
 
 ## Standard Development Commands
 
+Raycast API documentation is available locally under `raycast-temp/docs/` for quick reference.
+
 ### Core Workflow
 - `npm run dev` – Start Raycast development mode
 - `npm run build` – Produce the Raycast extension bundle

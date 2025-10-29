@@ -1,12 +1,12 @@
 // Disable ANSI styling so Raycast developer console keeps logs readable
 process.env.FORCE_COLOR = "0";
 process.env.NO_COLOR = "1";
-const ansiPattern = /\u001b\[[0-9;]*m/g;
-const wrapConsoleMethod = (method: (...args: unknown[]) => void) =>
+const ansiEscapePattern = `${String.fromCharCode(27)}\\[[0-9;]*m`;
+const ansiPattern = new RegExp(ansiEscapePattern, "g");
+const wrapConsoleMethod =
+  (method: (...args: unknown[]) => void) =>
   (...args: unknown[]) => {
-    method(
-      ...args.map((arg) => (typeof arg === "string" ? arg.replace(ansiPattern, "") : arg)),
-    );
+    method(...args.map((arg) => (typeof arg === "string" ? arg.replace(ansiPattern, "") : arg)));
   };
 console.log = wrapConsoleMethod(console.log.bind(console));
 console.warn = wrapConsoleMethod(console.warn.bind(console));
@@ -206,13 +206,7 @@ function logApiResponse(data: CompanyData) {
   }
 }
 
-function TemplateEditor({
-  initialTemplate,
-  onSave,
-}: {
-  initialTemplate: string;
-  onSave: (value: string) => void;
-}) {
+function TemplateEditor({ initialTemplate, onSave }: { initialTemplate: string; onSave: (value: string) => void }) {
   const { pop } = useNavigation();
   const [value, setValue] = useState(initialTemplate);
 
@@ -255,23 +249,18 @@ function buildVariableSections() {
 
   const entries = Object.entries(AVAILABLE_TEMPLATE_VARIABLES);
   for (const [index, [groupKey, variables]] of entries.entries()) {
-    const groupTitle = groupKey === "personneMorale"
-      ? "Corporate entities"
-      : groupKey === "personnePhysique"
-      ? "Individual entrepreneurs"
-      : "Common";
+    const groupTitle =
+      groupKey === "personneMorale"
+        ? "Corporate entities"
+        : groupKey === "personnePhysique"
+          ? "Individual entrepreneurs"
+          : "Common";
 
     const text = variables.map((variable) => `• ${variable}`).join("\n");
     if (index > 0) {
       sections.push(<Form.Separator key={`separator-${groupKey}`} />);
     }
-    sections.push(
-      <Form.Description
-        key={groupKey}
-        title={groupTitle}
-        text={text}
-      />,
-    );
+    sections.push(<Form.Description key={groupKey} title={groupTitle} text={text} />);
   }
 
   return sections;

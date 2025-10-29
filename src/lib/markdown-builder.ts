@@ -108,7 +108,15 @@ const PERSONNE_MORALE_STRINGS_FR = {
 } as const;
 
 export const AVAILABLE_TEMPLATE_VARIABLES = {
-  common: ["company_type", "siren", "siren_formatted", "company_name", "legal_form", "company_header", "company_details"],
+  common: [
+    "company_type",
+    "siren",
+    "siren_formatted",
+    "company_name",
+    "legal_form",
+    "company_header",
+    "company_details",
+  ],
   personneMorale: [
     "legal_form",
     "legal_form_english",
@@ -163,7 +171,7 @@ function getUserTemplate(): string | undefined {
     if (typeof template === "string" && template.trim().length > 0) {
       return template;
     }
-  } catch (error) {
+  } catch {
     // Preferences are not available outside Raycast (e.g. during tests)
   }
   return undefined;
@@ -481,7 +489,10 @@ function createPersonneMoraleTemplateVariables(
     }
   } else {
     const strings = PERSONNE_MORALE_STRINGS_FR;
-    shareCapitalLine = strings.shareCapitalLine(legalForm || FALLBACK_VALUES.MISSING_DATA, shareCapitalWithCurrencyFrench);
+    shareCapitalLine = strings.shareCapitalLine(
+      legalForm || FALLBACK_VALUES.MISSING_DATA,
+      shareCapitalWithCurrencyFrench,
+    );
     headOfficeLine = strings.headOfficeLine(address);
     registrationLine = strings.registrationLine(rcsCity, sirenFormatted);
     companyHeader = strings.companyHeader(denomination);

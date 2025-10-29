@@ -10,21 +10,25 @@ interface CompanyDetailsViewProps {
   templateOverride?: string;
 }
 
+async function generateLocalizedMarkdowns(companyData: CompanyData, templateOverride?: string) {
+  const normalizedTemplate = templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined;
+
+  const [fr, en] = await Promise.all([
+    buildMarkdownAsync(companyData, {
+      template: normalizedTemplate,
+      language: "fr",
+    }),
+    buildMarkdownAsync(companyData, {
+      template: normalizedTemplate,
+      language: "en",
+    }),
+  ]);
+
+  return { fr, en };
+}
+
 export function CompanyDetailsView({ data, templateOverride }: CompanyDetailsViewProps) {
-  const { data: markdowns, isLoading } = usePromise(
-    async (companyData: CompanyData) =>
-      await Promise.all([
-        buildMarkdownAsync(companyData, {
-          template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
-          language: "fr",
-        }),
-        buildMarkdownAsync(companyData, {
-          template: templateOverride && templateOverride.trim().length > 0 ? templateOverride : undefined,
-          language: "en",
-        }),
-      ]).then(([fr, en]) => ({ fr, en })),
-    [data, templateOverride],
-  );
+  const { data: markdowns, isLoading } = usePromise(generateLocalizedMarkdowns, [data, templateOverride]);
 
   const frenchMarkdown =
     markdowns?.fr ||
