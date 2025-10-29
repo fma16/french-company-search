@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.1] - {PR_MERGE_DATE}
+## [1.2.0] - {PR_MERGE_DATE}
+
+### Added
+- **🌍 Dual-language output**: `CompanyDetailsView` now renders French and English markdown side by side with dedicated copy actions.
+- **🧰 Template editor view**: New in-app editor (⌘⇧E) lists available placeholders and lets you adjust the output template before generating results.
+- **🔗 Pappers shortcut**: Quick action (⌘⇧O) opens the company's Pappers page, with graceful fallback to a toast when identifiers are missing.
+
+### Changed
+- **📋 Clipboard bootstrap**: Search form can auto-fill the input from the clipboard on launch, gated by the new `autoReadClipboard` preference.
+- **🗂️ Placeholder catalog**: `AVAILABLE_TEMPLATE_VARIABLES` reorganized to surface corporate vs individual variables clearly in the editor.
+- **🧼 Console hygiene**: All Raycast console output now strips ANSI escape sequences to keep logs readable.
+
+### Fixed
+- **✅ Raycast validation**: Manifest updates satisfy the latest `ray lint` checks (preference type adjustment, regenerated types).
+- **🧱 Type safety**: Tightened `usePromise` usage and test fixtures to keep `tsc --noEmit` green.
+- **🧾 Locale formatting**: English role label overrides refined so dual-language exports stay accurate.
+
+## [1.1.1] - 2025-10-29
 
 ### Fixed
 - **🔄 Recursive Representative Search**: Repaired functionality for companies with holding company representatives
