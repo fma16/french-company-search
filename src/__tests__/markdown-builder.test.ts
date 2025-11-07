@@ -4,6 +4,7 @@ import {
   buildPersonneMoraleMarkdown,
   buildPersonnePhysiqueMarkdown,
   extractRepresentativeInfo,
+  findUnsupportedTemplateVariables,
   markdownToHtml,
   markdownToPlainText,
 } from "../lib/markdown-builder";
@@ -459,5 +460,82 @@ describe("markdown-builder", () => {
 
       expect(result).toBe("No information to display.");
     });
+  });
+});
+
+describe("template validation", () => {
+  it("detects unsupported placeholders", () => {
+    const unsupported = findUnsupportedTemplateVariables("{{company_name}} {{unknown_placeholder}} {{company_name}}");
+    expect(unsupported).toEqual(["unknown_placeholder"]);
+  });
+
+  it("injects a warning in the output when unsupported placeholders are used", () => {
+    const mockData: CompanyData = {
+      id: "template-warning-test",
+      formality: {
+        siren: "123456789",
+        content: {
+          succursaleOuFiliale: "AVEC_ETABLISSEMENT",
+          formeExerciceActivitePrincipale: "COMMERCIALE",
+          personneMorale: {
+            denomination: "Example Corp",
+            identite: {
+              entreprise: {
+                denomination: "Example Corp",
+              },
+              description: {
+                montantCapital: 5000,
+              },
+            },
+            adresseEntreprise: {
+              adresse: {
+                codePostal: "75002",
+                numeroVoie: "50",
+                typeVoie: "rue",
+                libelleVoie: "du Louvre",
+                commune: "Paris",
+              },
+            },
+            immatriculationRcs: {
+              villeImmatriculation: "PARIS",
+              numeroRcs: "123456789",
+            },
+            composition: {
+              pouvoirs: [
+                {
+                  individu: {
+                    descriptionPersonne: {
+                      nom: "Martin",
+                      prenoms: ["Luc"],
+                      genre: "1",
+                    },
+                  },
+                  roleEntreprise: "5132",
+                },
+              ],
+            },
+          },
+          natureCreation: {
+            dateCreation: "2020-01-01",
+            societeEtrangere: false,
+            formeJuridique: "5499",
+            formeJuridiqueInsee: "5499",
+            etablieEnFrance: true,
+            salarieEnFrance: false,
+            relieeEntrepriseAgricole: false,
+            entrepriseAgricole: false,
+          },
+        },
+      },
+      updatedAt: "2023-01-01",
+      nombreEtablissementsOuverts: 1,
+      nombreRepresentantsActifs: 1,
+    };
+
+    const template = "Unsupported: {{does_not_exist}}\n\n{{company_header}}";
+    const result = buildPersonneMoraleMarkdown(mockData, template);
+
+    expect(result).toContain("⚠️ Unsupported template variables detected: does_not_exist.");
+    expect(result).toContain("Example Corp");
   });
 });

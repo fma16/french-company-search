@@ -107,6 +107,8 @@ const PERSONNE_MORALE_STRINGS_FR = {
     `Représentée aux fins des présentes par la société ${holdingName} en tant que ${holdingRole}, elle-même représentée par ${physicalName} en tant que ${physicalRole}, dûment ${genderAgreement}.`,
 } as const;
 
+const TEMPLATE_PLACEHOLDER_REGEX = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+
 export const AVAILABLE_TEMPLATE_VARIABLES = {
   common: [
     "company_type",
@@ -164,6 +166,31 @@ export const AVAILABLE_TEMPLATE_VARIABLES = {
   ],
 } as const;
 
+const ALL_TEMPLATE_VARIABLES = new Set<string>(
+  Object.values(AVAILABLE_TEMPLATE_VARIABLES)
+    .flat()
+    .map((variable) => variable.trim()),
+);
+
+function extractTemplatePlaceholders(template: string): string[] {
+  if (!template) {
+    return [];
+  }
+  const matches = template.matchAll(TEMPLATE_PLACEHOLDER_REGEX);
+  const placeholders = new Set<string>();
+  for (const match of matches) {
+    const placeholder = match[1]?.trim();
+    if (placeholder) {
+      placeholders.add(placeholder);
+    }
+  }
+  return Array.from(placeholders);
+}
+
+export function findUnsupportedTemplateVariables(template: string): string[] {
+  return extractTemplatePlaceholders(template).filter((placeholder) => !ALL_TEMPLATE_VARIABLES.has(placeholder));
+}
+
 function getUserTemplate(): string | undefined {
   try {
     const preferences = getPreferenceValues<Preferences>();
@@ -178,10 +205,28 @@ function getUserTemplate(): string | undefined {
 }
 
 function renderTemplate(template: string, variables: TemplateVariables): string {
-  return template.replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
+  const unsupported = new Set<string>();
+  const rendered = template.replace(TEMPLATE_PLACEHOLDER_REGEX, (_, placeholder) => {
+    const key = placeholder.trim();
+    if (!ALL_TEMPLATE_VARIABLES.has(key)) {
+      unsupported.add(key);
+      return "";
+    }
     const value = variables[key];
     return value !== undefined ? value : "";
   });
+
+  if (unsupported.size > 0) {
+    const warningMessage = `⚠️ Unsupported template variables detected: ${Array.from(unsupported).join(", ")}.`;
+    console.warn(warningMessage);
+    const trimmedRendered = rendered.trim();
+    if (!trimmedRendered) {
+      return warningMessage;
+    }
+    return `${warningMessage}\n\n${trimmedRendered}`;
+  }
+
+  return rendered;
 }
 
 /**
@@ -427,9 +472,6 @@ function createPersonneMoraleTemplateVariables(
 
     if (roleCodeValue) {
       const mapped = getRoleNameEnglishByCode(roleCodeValue);
-      if (mapped && !/^\[\[Role code/.test(mapped)) {
-        return mapped;
-      }
       if (mapped) {
         return mapped;
       }

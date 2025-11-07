@@ -26,7 +26,7 @@ import {
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { validateAndExtractSiren } from "./lib/utils";
-import { AVAILABLE_TEMPLATE_VARIABLES } from "./lib/markdown-builder";
+import { AVAILABLE_TEMPLATE_VARIABLES, findUnsupportedTemplateVariables } from "./lib/markdown-builder";
 import { useCompanyData } from "./lib/useCompanyData";
 import { ErrorView } from "./components/ErrorView";
 import { CompanyDetailsView } from "./components/CompanyDetailsView";
@@ -44,9 +44,15 @@ function SearchForm() {
   const [sirenError, setSirenError] = useState<string | undefined>();
   const [hasInitialisedFromClipboard, setHasInitialisedFromClipboard] = useState(false);
   const [templateOverride, setTemplateOverride] = useState<string>(preferences.outputTemplate ?? "");
+  const hasUserInput = sirenInput.trim().length > 0;
 
   useEffect(() => {
     if (!shouldReadClipboard || hasInitialisedFromClipboard) {
+      return;
+    }
+
+    if (hasUserInput) {
+      setHasInitialisedFromClipboard(true);
       return;
     }
 
@@ -96,7 +102,7 @@ function SearchForm() {
     return () => {
       isMounted = false;
     };
-  }, [shouldReadClipboard, hasInitialisedFromClipboard, sirenError]);
+  }, [shouldReadClipboard, hasInitialisedFromClipboard, sirenError, hasUserInput]);
 
   function handleAction() {
     if (!sirenInput) {
@@ -183,7 +189,7 @@ function CompanyDetail({ siren, templateOverride }: { siren: string; templateOve
     return <CompanyDetailsView data={data} templateOverride={templateOverride} />;
   }
 
-  return <Detail markdown="Aucune information disponible." />;
+  return <Detail markdown="No information available." />;
 }
 
 function logApiResponse(data: CompanyData) {
@@ -208,9 +214,20 @@ function logApiResponse(data: CompanyData) {
 
 function TemplateEditor({ initialTemplate, onSave }: { initialTemplate: string; onSave: (value: string) => void }) {
   const { pop } = useNavigation();
-  const [value, setValue] = useState(initialTemplate);
+  const [value, setValue] = useState(initialTemplate ?? "");
+  const invalidVariables = findUnsupportedTemplateVariables(value);
+  const hasInvalidVariables = invalidVariables.length > 0;
 
   function handleSave() {
+    if (hasInvalidVariables) {
+      void showToast({
+        style: Toast.Style.Failure,
+        title: "Unsupported placeholders detected",
+        message: invalidVariables.join(", "),
+      });
+      return;
+    }
+
     onSave(value.trim());
     void showToast({
       style: Toast.Style.Success,
@@ -237,6 +254,15 @@ function TemplateEditor({ initialTemplate, onSave }: { initialTemplate: string; 
         onChange={setValue}
         info="Leave empty to use the default template."
       />
+      {hasInvalidVariables ? (
+        <>
+          <Form.Separator />
+          <Form.Description
+            title="Unsupported placeholders"
+            text={invalidVariables.map((variable) => `• ${variable}`).join("\n")}
+          />
+        </>
+      ) : null}
       <Form.Separator />
       <Form.Description title="Available Variables" text="The template supports the following placeholders:" />
       {buildVariableSections()}

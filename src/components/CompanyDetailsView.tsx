@@ -1,5 +1,5 @@
-import { Action, ActionPanel, Detail, Icon, Toast, showToast } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { Action, ActionPanel, Detail, Icon } from "@raycast/api";
+import { showFailureToast, usePromise } from "@raycast/utils";
 import { CompanyData } from "../types";
 import { buildMarkdownAsync, markdownToHtml, markdownToPlainText } from "../lib/markdown-builder";
 import { CompanyMetadata } from "./CompanyMetadata";
@@ -82,9 +82,7 @@ export function CompanyDetailsView({ data, templateOverride }: CompanyDetailsVie
                 icon={Icon.ExclamationMark}
                 shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
                 onAction={async () => {
-                  await showToast({
-                    style: Toast.Style.Failure,
-                    title: "Identifiant indisponible",
+                  await showFailureToast("Identifiant indisponible", {
                     message: "Impossible d'ouvrir la fiche Pappers pour cette entreprise.",
                   });
                 }}
