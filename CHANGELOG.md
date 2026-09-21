@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - {PR_MERGE_DATE}
+## [1.2.1] - {PR_MERGE_DATE}
+
+### Changed
+- Updated the Raycast SDK requirement to `@raycast/api` 1.104.16 or newer for Raycast 2 compatibility.
+- Aligned Node and React types with the SDK and moved CI jobs to Node.js 22.22.2.
+- Updated dependencies through Dependabot and npm audit maintenance.
+
+### Fixed
+- The template editor now identifies unsupported placeholders before saving, and generated output warns when a template contains them.
+- Clipboard autofill no longer replaces a SIREN or SIRET already entered by the user.
+- Unavailable Pappers identifiers now use the standard failure toast.
+
+## [1.2.0] - 2025-10-30
 
 ### Added
 - **🌍 Dual-language output**: `CompanyDetailsView` now renders French and English markdown side by side with dedicated copy actions.
